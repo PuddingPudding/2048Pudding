@@ -27,6 +27,11 @@ public class GameManager : MonoBehaviour
             this.PushLeft();
             this.SpawnBlock(1);
         }
+        else if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            this.PushRight();
+            this.SpawnBlock(1);
+        }
         UpdateGame();
     }
 
@@ -115,6 +120,40 @@ public class GameManager : MonoBehaviour
                     }
                 }
             }            
+        }
+    }
+
+    public void PushRight()
+    {
+        int checkingBlock; //正在受檢查的格子索引值
+        int nextBlock; //在他之後的其他格子之索引值        
+        for (int i = 0; i < iLength; i++)
+        {
+            for (int j = 0; j < iLength - 1; j++)
+            {
+                checkingBlock = ((i + 1) * iLength - 1) - j; //先選定要開始受檢查的基準點
+                nextBlock = checkingBlock - 1;
+                while (iListCheckBoard[nextBlock] == 0 && (nextBlock) > (i * iLength)) //(i * iLength)為現今檢察之行線的最後一位
+                {
+                    nextBlock--;//一直往旁邊找，直到找到一個非空(不是0)的格子，或著找到底(在往左一個會超出該行)了
+                }
+                if (iListCheckBoard[nextBlock] != 0) //找到的那一個不為0
+                {
+                    if (iListCheckBoard[nextBlock] == iListCheckBoard[checkingBlock] || iListCheckBoard[checkingBlock] == 0)//那檢察是否兩數字一樣，或著現在的這一個沒有數字(0)
+                    {
+                        iListCheckBoard[checkingBlock] += iListCheckBoard[nextBlock];
+                        iListCheckBoard[nextBlock] = 0;
+                    }
+                    else if (iListCheckBoard[nextBlock] != iListCheckBoard[checkingBlock])//若不一樣，把後面那個拉到身旁
+                    {
+                        iListCheckBoard[checkingBlock - 1] = iListCheckBoard[nextBlock];
+                        if (nextBlock != checkingBlock - 1) //在一般情況下，假如有拉過來就會把原先的格子設為0，但如果他本來就在我旁邊，那就不需要
+                        {
+                            iListCheckBoard[nextBlock] = 0;
+                        }
+                    }
+                }
+            }
         }
     }
 }
