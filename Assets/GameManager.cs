@@ -22,7 +22,7 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(Input.GetKeyDown(KeyCode.LeftArrow) )
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
             this.PushLeft();
             this.SpawnBlock(1);
@@ -74,10 +74,10 @@ public class GameManager : MonoBehaviour
             {
                 iBlockChose = Random.Range(0, iListCheckBoard.Count);
             }
-            if(canSpawn)
+            if (canSpawn)
             {
                 iListCheckBoard[iBlockChose] = iBlockNum;
-            }            
+            }
         }
     }
 
@@ -91,66 +91,96 @@ public class GameManager : MonoBehaviour
 
     public void PushLeft()
     {
-        int checkingBlock; //正在受檢查的格子索引值
-        int nextBlock; //在他之後的其他格子之索引值        
-        for (int i = 0; i<iLength;i++)
+        int iComparing; //正在受比對的格子索引值
+        int iPolling; //輪尋格子的索引值
+        bool pollFinish = false; //這一波輪尋是否已結束
+        for (int i = 0; i < iLength; i++)
         {
-            for(int j = 0; j<iLength-1;j++)
+            for (int j = 0; j < iLength; j++)
             {
-                checkingBlock = (i * iLength) + j; //先選定要開始受檢查的基準點
-                nextBlock = checkingBlock + 1;
-                while(iListCheckBoard[nextBlock] == 0 && (nextBlock)< ( (i+1) * iLength -1)) //( (i+1) * iLength -1)為現今檢察之行線的最後一位
+                pollFinish = false;
+                iComparing = (i * iLength) + j;
+                iPolling = iComparing + 1;
+                while (!pollFinish)
                 {
-                    nextBlock++;//一直往旁邊找，直到找到一個非空(不是0)的格子，或著找到底(下一個會超出該行)了
-                }
-                if(iListCheckBoard[nextBlock] != 0) //找到的那一個不為0
-                {
-                    if (iListCheckBoard[nextBlock] == iListCheckBoard[checkingBlock] || iListCheckBoard[checkingBlock] == 0)//那檢察是否兩數字一樣，或著現在的這一個沒有數字(0)
+                    if (iPolling >= (i + 1) * iLength)//若輪尋格子超出了目前的這條行線
                     {
-                        iListCheckBoard[checkingBlock] += iListCheckBoard[nextBlock];
-                        iListCheckBoard[nextBlock] = 0;
+                        pollFinish = true;
                     }
-                    else if(iListCheckBoard[nextBlock] != iListCheckBoard[checkingBlock])//若不一樣，把後面那個拉到身旁
+                    else if (iListCheckBoard[iPolling] != 0)//若輪尋格子有東西(不為0)
                     {
-                        iListCheckBoard[checkingBlock+1] = iListCheckBoard[nextBlock];
-                        if(nextBlock != checkingBlock+1) //在一般情況下，假如有拉過來就會把原先的格子設為0，但如果他本來就在我旁邊，那就不需要
+                        if (iListCheckBoard[iComparing] == 0)//但受比對的格子是空的(0)的話，那就直接把數字搬過來
                         {
-                            iListCheckBoard[nextBlock] = 0;
+                            iListCheckBoard[iComparing] = iListCheckBoard[iPolling];
+                            iListCheckBoard[iPolling] = 0;
+                        }
+                        else //其餘狀況，也就是當受比對的格子有東西(不為0)
+                        {
+                            if (iListCheckBoard[iComparing] == iListCheckBoard[iPolling])//若比對者與輪尋者皆同，兩者合併
+                            {
+                                iListCheckBoard[iComparing] += iListCheckBoard[iPolling];
+                                iListCheckBoard[iPolling] = 0;
+                            }
+                            else if(iListCheckBoard[iComparing+1] == 0)//若比對者的隔壁沒東西(0)，那就把輪尋到的那個數字直接搬過來
+                            {
+                                iListCheckBoard[iComparing + 1] += iListCheckBoard[iPolling];
+                                iListCheckBoard[iPolling] = 0;
+                            }
+                            pollFinish = true;
                         }
                     }
+                    else//其餘狀況，也就是當輪尋格子沒東西(0)，且輪尋值也還未到底時
+                    {
+                        iPolling++;
+                    }
                 }
-            }            
+            }
         }
     }
 
     public void PushRight()
     {
-        int checkingBlock; //正在受檢查的格子索引值
-        int nextBlock; //在他之後的其他格子之索引值        
+        int iComparing; //正在受比對的格子索引值
+        int iPolling; //輪尋格子的索引值
+        bool pollFinish = false; //這一波輪尋是否已結束
         for (int i = 0; i < iLength; i++)
         {
-            for (int j = 0; j < iLength - 1; j++)
+            for (int j = 0; j < iLength; j++)
             {
-                checkingBlock = ((i + 1) * iLength - 1) - j; //先選定要開始受檢查的基準點
-                nextBlock = checkingBlock - 1;
-                while (iListCheckBoard[nextBlock] == 0 && (nextBlock) > (i * iLength)) //(i * iLength)為現今檢察之行線的最後一位
+                pollFinish = false;
+                iComparing = ( (i+1) * iLength -1) - j;
+                iPolling = iComparing - 1;
+                while (!pollFinish)
                 {
-                    nextBlock--;//一直往旁邊找，直到找到一個非空(不是0)的格子，或著找到底(在往左一個會超出該行)了
-                }
-                if (iListCheckBoard[nextBlock] != 0) //找到的那一個不為0
-                {
-                    if (iListCheckBoard[nextBlock] == iListCheckBoard[checkingBlock] || iListCheckBoard[checkingBlock] == 0)//那檢察是否兩數字一樣，或著現在的這一個沒有數字(0)
+                    if (iPolling < (i * iLength) )//若輪尋格子超出了目前的這條行線
                     {
-                        iListCheckBoard[checkingBlock] += iListCheckBoard[nextBlock];
-                        iListCheckBoard[nextBlock] = 0;
+                        pollFinish = true;
                     }
-                    else if (iListCheckBoard[nextBlock] != iListCheckBoard[checkingBlock])//若不一樣，把後面那個拉到身旁
+                    else if (iListCheckBoard[iPolling] != 0)//若輪尋格子有東西(不為0)
                     {
-                        iListCheckBoard[checkingBlock - 1] = iListCheckBoard[nextBlock];
-                        if (nextBlock != checkingBlock - 1) //在一般情況下，假如有拉過來就會把原先的格子設為0，但如果他本來就在我旁邊，那就不需要
+                        if (iListCheckBoard[iComparing] == 0)//但受比對的格子是空的(0)的話，那就直接把數字搬過來
                         {
-                            iListCheckBoard[nextBlock] = 0;
+                            iListCheckBoard[iComparing] = iListCheckBoard[iPolling];
+                            iListCheckBoard[iPolling] = 0;
                         }
+                        else //其餘狀況，也就是當受比對的格子有東西(不為0)
+                        {
+                            if (iListCheckBoard[iComparing] == iListCheckBoard[iPolling])//若比對者與輪尋者皆同，兩者合併
+                            {
+                                iListCheckBoard[iComparing] += iListCheckBoard[iPolling];
+                                iListCheckBoard[iPolling] = 0;
+                            }
+                            else if (iListCheckBoard[iComparing - 1] == 0)//若比對者的隔壁沒東西(0)，那就把輪尋到的那個數字直接搬過來
+                            {
+                                iListCheckBoard[iComparing - 1] += iListCheckBoard[iPolling];
+                                iListCheckBoard[iPolling] = 0;
+                            }
+                            pollFinish = true;
+                        }
+                    }
+                    else//其餘狀況，也就是當輪尋格子沒東西(0)，且輪尋值也還未到底時
+                    {
+                        iPolling--;
                     }
                 }
             }
