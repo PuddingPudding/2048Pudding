@@ -57,17 +57,18 @@ public class GameManager : MonoBehaviour
                 this.SpawnBlock(1);
             }
         }
+
         UpdateGame();
-        if(!PushAbleDown() && !PushAbleLeft() && !PushAbleRight() && !PushAbleUp() )
+
+        if (!PushAbleDown() && !PushAbleLeft() && !PushAbleRight() && !PushAbleUp())
         {
             this.gameOverView.SetActive(true);
         }
-
     }
 
     public void InitGame()
     {
-        if(iListCheckBoard == null && listBlockScript == null)//假設兩者(數字陣列與格子程式的陣列)都尚未生成，則幫他們新分配
+        if (iListCheckBoard == null && listBlockScript == null)//假設兩者(數字陣列與格子程式的陣列)都尚未生成，則幫他們新分配
         {
             iListCheckBoard = new List<int>();
             listBlockScript = new List<BlockScript>();
@@ -78,7 +79,7 @@ public class GameManager : MonoBehaviour
                 initPlace.x += v2BlockInterval.x * (i % iLength);
                 initPlace.y -= v2BlockInterval.y * (i / iLength);
                 GameObject blockTemp = Instantiate(blockPrefab, initPlace, blockPrefab.transform.rotation);
-                blockTemp.transform.parent = tInitPosition.transform;
+                blockTemp.transform.SetParent(tInitPosition.transform);
                 blockTemp.transform.localPosition = initPlace;
                 BlockScript BSTemp = blockTemp.GetComponent<BlockScript>();
                 listBlockScript.Add(BSTemp);
@@ -86,9 +87,35 @@ public class GameManager : MonoBehaviour
         }
         else //其餘狀況，也就是已經有先生成過了，只是要重玩
         {
-            for (int i = 0; i < (iLength * iLength); i++)
-            {
-                iListCheckBoard[i] = 0;
+            for (int i = 0; i < (iLength * iLength) || i < listBlockScript.Count; i++)
+            {//這裡的迴圈判斷條件有兩個，因為如果新的棋盤較大的話，那原本的list就需要擴增，但如果新棋盤較小的話，那原本list多出來的部分就需要先關閉(但不要刪掉)
+
+                if (i < (iLength * iLength) && i < listBlockScript.Count) //假如目前新格子的編號還在原本的list範圍內的話
+                {
+                    iListCheckBoard[i] = 0;
+                    Vector3 initPlace = Vector3.zero;
+                    initPlace.x += v2BlockInterval.x * (i % iLength);
+                    initPlace.y -= v2BlockInterval.y * (i / iLength);
+                    listBlockScript[i].gameObject.SetActive(true);
+                    listBlockScript[i].transform.SetParent(tInitPosition.transform);
+                    listBlockScript[i].transform.localPosition = initPlace;
+                }
+                else if (i < (iLength * iLength) && i >= listBlockScript.Count) //假如目前新格子的編號已經超出，則需要額外再生成格子物件給新棋盤
+                {
+                    iListCheckBoard.Add(0);
+                    Vector3 initPlace = Vector3.zero;
+                    initPlace.x += v2BlockInterval.x * (i % iLength);
+                    initPlace.y -= v2BlockInterval.y * (i / iLength);
+                    GameObject blockTemp = Instantiate(blockPrefab, initPlace, blockPrefab.transform.rotation);
+                    blockTemp.transform.SetParent(tInitPosition.transform);
+                    blockTemp.transform.localPosition = initPlace;
+                    BlockScript BSTemp = blockTemp.GetComponent<BlockScript>();
+                    listBlockScript.Add(BSTemp);
+                }
+                else if (i >= (iLength * iLength) && i < listBlockScript.Count) //假如目前的編號已經超出了新格子的需求，那就將原本list多出來的物件先關閉
+                {
+                    listBlockScript[i].gameObject.SetActive(false);
+                }
             }
         }
         iScore = 0;
@@ -101,9 +128,9 @@ public class GameManager : MonoBehaviour
         for (int i = 0; i < iSpawnNum; i++)
         {
             int iBlockNum = Random.Range(1, 3) * 2;
-            int iBlockChose = Random.Range(0, iListCheckBoard.Count);
+            int iBlockChose = Random.Range(0, (iLength * iLength));
             bool canSpawn = false;
-            for (int j = 0; j < iListCheckBoard.Count && !canSpawn; j++)
+            for (int j = 0; j < (iLength * iLength) && !canSpawn; j++)
             {
                 if (iListCheckBoard[j] == 0)
                 {
@@ -123,7 +150,7 @@ public class GameManager : MonoBehaviour
 
     public void UpdateGame()
     {
-        for (int i = 0; i < iListCheckBoard.Count; i++)
+        for (int i = 0; i < (iLength * iLength); i++) //改寫為棋盤邊長的平方，因為未來如果玩家先生成了一個4*4的棋盤，而後又改玩2*2的話，那裝數字的列表就會變得過長
         {
             listBlockScript[i].SetText(iListCheckBoard[i]);
         }
