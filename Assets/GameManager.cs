@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,6 +12,7 @@ public class GameManager : MonoBehaviour
     public Transform tInitPosition; //第一個生成格子物件的位子
     public Text textScore;
     public GameObject gameOverView;//失敗時會看到的東西
+    public InputField textLengthInput; //輸入欄位，讓玩家在遊戲結束時可以自己手動輸入，決定邊長
 
     private List<int> iListCheckBoard; //用來紀錄整個2048棋盤中每一格數字的串列
     private List<BlockScript> listBlockScript;//用來存取每一個格子的程式碼，格子身上的程式碼可以讓你設定顯示的數字
@@ -18,6 +20,7 @@ public class GameManager : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        textLengthInput.text = "" + iLength;
         InitGame();
         UpdateGame();
     }
@@ -68,6 +71,12 @@ public class GameManager : MonoBehaviour
 
     public void InitGame()
     {
+        int newLength = System.Convert.ToInt32(textLengthInput.text); //原本使用的是int.parse()的方法，然而int.parse似乎無法處理null字串
+        if(newLength >= 2 && newLength <= 5) //若新的邊長在合理範圍，則直接設定
+        {
+            iLength = newLength;
+        }//而其餘的情況則乾脆不變
+
         if (iListCheckBoard == null && listBlockScript == null)//假設兩者(數字陣列與格子程式的陣列)都尚未生成，則幫他們新分配
         {
             iListCheckBoard = new List<int>();
