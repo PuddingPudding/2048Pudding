@@ -8,7 +8,6 @@ public class GameManager : MonoBehaviour
     public int iLength = 4; //棋盤邊長
     public GameObject blockPrefab; //每個格子的遊戲物件原型
     public Vector2 v2BlockInterval = new Vector2(60, 60); //每個格子物件間的間隔
-    public Canvas cUICanvas;
     public Transform tInitPosition; //第一個生成格子物件的位子
     public Text textScore;
     public GameObject gameOverView;//失敗時會看到的東西
@@ -21,8 +20,6 @@ public class GameManager : MonoBehaviour
     {
         InitGame();
         UpdateGame();
-        iScore = 0;
-        gameOverView.SetActive(false);
     }
 
     // Update is called once per frame
@@ -65,25 +62,37 @@ public class GameManager : MonoBehaviour
         {
             this.gameOverView.SetActive(true);
         }
+
     }
 
     public void InitGame()
     {
-        iListCheckBoard = new List<int>();
-        listBlockScript = new List<BlockScript>();
-        for (int i = 0; i < (iLength * iLength); i++)
+        if(iListCheckBoard == null && listBlockScript == null)//假設兩者(數字陣列與格子程式的陣列)都尚未生成，則幫他們新分配
         {
-            iListCheckBoard.Add(0);
-
-            Vector3 initPlace = tInitPosition.transform.localPosition;
-            initPlace.x += v2BlockInterval.x * (i % iLength);
-            initPlace.y -= v2BlockInterval.y * (i / iLength);
-            GameObject blockTemp = Instantiate(blockPrefab, initPlace, blockPrefab.transform.rotation);
-            blockTemp.transform.parent = cUICanvas.transform;
-            blockTemp.transform.localPosition = initPlace;
-            BlockScript BSTemp = blockTemp.GetComponent<BlockScript>();
-            listBlockScript.Add(BSTemp);
+            iListCheckBoard = new List<int>();
+            listBlockScript = new List<BlockScript>();
+            for (int i = 0; i < (iLength * iLength); i++)
+            {
+                iListCheckBoard.Add(0);
+                Vector3 initPlace = Vector3.zero;
+                initPlace.x += v2BlockInterval.x * (i % iLength);
+                initPlace.y -= v2BlockInterval.y * (i / iLength);
+                GameObject blockTemp = Instantiate(blockPrefab, initPlace, blockPrefab.transform.rotation);
+                blockTemp.transform.parent = tInitPosition.transform;
+                blockTemp.transform.localPosition = initPlace;
+                BlockScript BSTemp = blockTemp.GetComponent<BlockScript>();
+                listBlockScript.Add(BSTemp);
+            }
         }
+        else //其餘狀況，也就是已經有先生成過了，只是要重玩
+        {
+            for (int i = 0; i < (iLength * iLength); i++)
+            {
+                iListCheckBoard[i] = 0;
+            }
+        }
+        iScore = 0;
+        gameOverView.SetActive(false);
         SpawnBlock(2);
     }
 
