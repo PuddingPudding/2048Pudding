@@ -13,7 +13,7 @@ public class BlockScript : MonoBehaviour
     }
 
     public Text sTextNum; //外頭顯示的字幕
-    public LevelColer[] arrLevelColor; //每個數字級別分別該有顏色，存在跟陣列裡
+    public LevelColer[] arrLevelColor; //每個數字級別分別該有顏色，存在該陣列裡
     private int iNum; //裡面儲存的數值
 
     // Use this for initialization
