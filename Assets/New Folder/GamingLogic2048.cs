@@ -9,7 +9,11 @@ public class GamingLogic2048
         Left,
         Right,
         Up,
-        Down
+        Down,
+        TopLeft,
+        BottomLeft,
+        TopRight,
+        BottomRight
     }
 
     private List<BlockData> m_listBoard; //整個棋盤
@@ -63,19 +67,19 @@ public class GamingLogic2048
         }
     }
 
-    public List<List<BlockData>> GetPushingList(EPushingDirection _ePushingDirection) //獲得正要進行 "壓縮" 的行線群，所以是list(行線)的list(群)
+    private List<List<int>> GetPushingList(EPushingDirection _ePushingDirection) //獲得正要進行 "壓縮" 的行線群，所以是list(行線)的list(群)之索引值
     {
-        List<List<BlockData>> listPushing = new List<List<BlockData>>();
+        List<List<int>> listPushing = new List<List<int>>();
         switch (_ePushingDirection)
         {
             case EPushingDirection.Left:
                 for (int i = 0; i < m_iLengthY; i++)
                 {
-                    List<BlockData> listPushingLine = new List<BlockData>();
+                    List<int> listPushingLine = new List<int>();
                     for (int j = 0; j < m_iLengthX; j++)
                     {
                         int iChosen = (i * m_iLengthX) + j;
-                        listPushingLine.Add(m_listBoard[iChosen]);
+                        listPushingLine.Add(iChosen);
                     }
                     listPushing.Add(listPushingLine);
                 }
@@ -83,11 +87,11 @@ public class GamingLogic2048
             case EPushingDirection.Right:
                 for (int i = 0; i < m_iLengthY; i++)
                 {
-                    List<BlockData> listPushingLine = new List<BlockData>();
+                    List<int> listPushingLine = new List<int>();
                     for (int j = 0; j < m_iLengthX; j++)
                     {
                         int iChosen = ((i + 1) * m_iLengthX - 1) - j;
-                        listPushingLine.Add(m_listBoard[iChosen]);
+                        listPushingLine.Add(iChosen);
                     }
                     listPushing.Add(listPushingLine);
                 }
@@ -95,11 +99,11 @@ public class GamingLogic2048
             case EPushingDirection.Up:
                 for (int i = 0; i < m_iLengthX; i++)
                 {
-                    List<BlockData> listPushingLine = new List<BlockData>();
+                    List<int> listPushingLine = new List<int>();
                     for (int j = 0; j < m_iLengthY; j++)
                     {
                         int iChosen = i + (j * m_iLengthX);
-                        listPushingLine.Add(m_listBoard[iChosen]);
+                        listPushingLine.Add(iChosen);
                     }
                     listPushing.Add(listPushingLine);
                 }
@@ -107,33 +111,135 @@ public class GamingLogic2048
             case EPushingDirection.Down:
                 for (int i = 0; i < m_iLengthX; i++)
                 {
-                    List<BlockData> listPushingLine = new List<BlockData>();
+                    List<int> listPushingLine = new List<int>();
                     for (int j = 0; j < m_iLengthY; j++)
                     {
                         int iChosen = i + ((m_iLengthY - 1) - j) * m_iLengthX;
-                        listPushingLine.Add(m_listBoard[iChosen]);
+                        listPushingLine.Add(iChosen);
                     }
                     listPushing.Add(listPushingLine);
                 }
                 break;
+            case EPushingDirection.TopLeft: //斜角方面，需要從起始點先往一邊(X軸方向)抓，再往下抓，所以需要兩個巢狀for
+                for(int i = 0; i<m_iLengthX; i++) //先從0,0向右找
+                {
+                    List<int> listPushingLine = new List<int>();
+                    for(int j = 0; j< (m_iLengthX-i) ;j++)
+                    {
+                        int iChosen = i + j + (j * m_iLengthX);
+                        if(iChosen < m_iBoardSize)
+                        {
+                            listPushingLine.Add(iChosen);
+                        }
+                    }
+                    listPushing.Add(listPushingLine);
+                }
+                for (int i = 1; i < m_iLengthY; i++)//再從X,0(起點向下一格) 向下找
+                {
+                    List<int> listPushingLine = new List<int>();
+                    for (int j = 0; j < (m_iLengthY - i); j++)
+                    {
+                        int iChosen = i * m_iLengthX + j + (j * m_iLengthX);
+                        if (iChosen < m_iBoardSize)
+                        {
+                            listPushingLine.Add(iChosen);
+                        }
+                    }
+                    listPushing.Add(listPushingLine);
+                }
+                    break;
         }
         return listPushing;
     }
 
     public void Pushing(EPushingDirection _ePushingDirection) //壓縮動作，只需將 "方向" 帶入
     {
-        List<List<BlockData>> listPushing = this.GetPushingList(_ePushingDirection);
-        foreach(List<BlockData> listPushingLine in listPushing) //挑出行線群的其中一條
+        List<List<int>> listPushing = this.GetPushingList(_ePushingDirection);
+        foreach (List<int> listPushingLine in listPushing) //挑出行線群的其中一條
         {
-            int iLineLength = listPushingLine.Count;
-            for (int i = 0; i < iLineLength; i++)//再針對該行線中的每個block做處理
+            for (int i = 0; i < listPushingLine.Count; i++)//再針對該行線中的每個block做處理
             {
-                for (int j = i + 1; j < iLineLength; j++)
+                BlockData blockComparing = m_listBoard[listPushingLine[i]]; //根據行線索引值找到該block物件
+                switch (blockComparing.GetBlockType())
                 {
-
+                    case BlockData.EBlockType.Normal: //普通格子會朝行線的後面找到其他普通格子，並試著合併自己
+                        bool bPolling = true; //表示正在輪尋
+                        for (int j = i + 1; j < listPushingLine.Count && bPolling; j++)
+                        {
+                            BlockData blockPolling = m_listBoard[listPushingLine[j]];
+                            switch (blockPolling.GetBlockType())
+                            {
+                                case BlockData.EBlockType.Normal://當遇到普通格子時，檢察其值是否不為0
+                                    if (blockPolling.GetBlockValue() != 0)
+                                    {
+                                        if (blockComparing.GetBlockValue() == 0)
+                                        {
+                                            blockComparing.PlusOn(blockPolling);
+                                        }
+                                        else if (blockComparing.GetBlockValue() == blockPolling.GetBlockValue())
+                                        {
+                                            blockComparing.PlusOn(blockPolling);
+                                            this.m_iScore += blockComparing.GetBlockValue();
+                                        }
+                                        bPolling = false;
+                                    }
+                                    break;
+                                case BlockData.EBlockType.Obstruct://當普通格子遇到障礙時，停止輪尋
+                                    bPolling = false;
+                                    break;
+                                case BlockData.EBlockType.None: //當普通格子遇到空洞，直接跳過，但不會停止輪尋
+                                    break;
+                            }
+                        }
+                        break;
+                    case BlockData.EBlockType.Obstruct: //障礙格子什麼都不會做，直接跳過
+                        break;
+                    case BlockData.EBlockType.None: //空洞格子什麼也不會做，直接跳過
+                        break;
                 }
             }
         }
+    }
+
+    public bool GetPushAble(EPushingDirection _ePushingDirection)
+    {
+        List<List<int>> listPushing = this.GetPushingList(_ePushingDirection);
+        bool bPushAble = false;//是否可進行壓縮
+        for (int i = 0; i < listPushing.Count && !bPushAble;i++) //挑出行線群的每一條行線進行檢查，若中途發現可以進行壓縮的話就跳出迴圈，因為沒有繼續檢查下去的必要
+        {
+            for (int j = 0; j < listPushing[i].Count -1 && !bPushAble; j++)
+            {
+                BlockData blockComparing = m_listBoard[listPushing[i][j]]; //根據行線索引值找到該block物件
+                switch (blockComparing.GetBlockType())
+                {
+                    case BlockData.EBlockType.Normal: //普通格子就會去檢查自己的下一格是否也是普通格子，且為0或跟自己相等
+                        int iNext = j + 1; //用來找出下一格的索引值
+                        BlockData blockPolling = m_listBoard[listPushing[i][iNext]];
+                        while(blockPolling.GetBlockType() == BlockData.EBlockType.None && iNext < listPushing[i].Count) //空洞格子雖然沒有效果，但是普通格子可以越過，所以判斷能不能推動時，必須跳過
+                        {
+                            iNext++;
+                            blockPolling = m_listBoard[listPushing[i][iNext]];
+                        } //一路一直找，直到找到非空洞(None的格子)，或著找到底了為止
+                        if(blockPolling.GetBlockType() == BlockData.EBlockType.Normal)
+                        {
+                            if(blockComparing.GetBlockValue() == 0 && blockPolling.GetBlockValue() != 0)
+                            {
+                                bPushAble = true;
+                            }
+                            else if(blockComparing.GetBlockValue() != 0 && blockComparing.GetBlockValue() == blockPolling.GetBlockValue() )
+                            {
+                                bPushAble = true;
+                            }
+                        }
+                        break;
+                    case BlockData.EBlockType.Obstruct: //障礙格子什麼都不會做，直接跳過
+                        break;
+                    case BlockData.EBlockType.None: //空洞格子什麼也不會做，直接跳過
+                        break;
+                }
+            }
+        }
+        return bPushAble;
     }
 
     public int GetBoardSize()

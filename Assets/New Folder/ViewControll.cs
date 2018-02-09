@@ -25,7 +25,51 @@ public class ViewControll : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.Keypad4))
+        {
+            if (m_game.GetPushAble(GamingLogic2048.EPushingDirection.Left))
+            {
+                m_game.Pushing(GamingLogic2048.EPushingDirection.Left);
+                m_game.SpawnRandomBlock(1);
+                UpdateGame();
+            }
+        }
+        else if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.Keypad6))
+        {
+            if (m_game.GetPushAble(GamingLogic2048.EPushingDirection.Right))
+            {
+                m_game.Pushing(GamingLogic2048.EPushingDirection.Right);
+                m_game.SpawnRandomBlock(1);
+                UpdateGame();
+            }
+        }
+        else if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.Keypad8))
+        {
+            if (m_game.GetPushAble(GamingLogic2048.EPushingDirection.Up))
+            {
+                m_game.Pushing(GamingLogic2048.EPushingDirection.Up);
+                m_game.SpawnRandomBlock(1);
+                UpdateGame();
+            }
+        }
+        else if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.Keypad2))
+        {
+            if (m_game.GetPushAble(GamingLogic2048.EPushingDirection.Down))
+            {
+                m_game.Pushing(GamingLogic2048.EPushingDirection.Down);
+                m_game.SpawnRandomBlock(1);
+                UpdateGame();
+            }
+        }
+        else if (Input.GetKeyDown(KeyCode.Keypad7))
+        {
+            if (m_game.GetPushAble(GamingLogic2048.EPushingDirection.TopLeft))
+            {
+                m_game.Pushing(GamingLogic2048.EPushingDirection.TopLeft);
+                m_game.SpawnRandomBlock(1);
+                UpdateGame();
+            }
+        }
     }
 
     private void InitGame()

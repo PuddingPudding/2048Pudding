@@ -311,8 +311,8 @@ MonoBehaviour:
     type: 2}
   m_vec2BlockInterval: {x: 65, y: 65}
   m_textScore: {fileID: 464792359}
-  m_iLengthX: 2
-  m_iLengthY: 2
+  m_iLengthX: 5
+  m_iLengthY: 5
 --- !u!1 &76134300
 GameObject:
   m_ObjectHideFlags: 0
