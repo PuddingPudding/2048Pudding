@@ -121,14 +121,14 @@ public class GamingLogic2048
                 }
                 break;
             case EPushingDirection.TopLeft: //斜角方面，需要從起始點先往一邊(X軸方向)抓，再往下抓，所以需要兩個巢狀for
-                for(int i = 0; i<m_iLengthX; i++) //先從0,0向右找
+                for (int i = 0; i < m_iLengthX; i++) //先從0,0向右找
                 {
                     List<int> listPushingLine = new List<int>();
-                    for(int j = 0; j< (m_iLengthX-i) ;j++)
+                    for (int j = 0; j < (m_iLengthX - i); j++)
                     {
                         int iChosen = i + j + (j * m_iLengthX);
-                        if(iChosen < m_iBoardSize)
-                        {
+                        if (iChosen < m_iBoardSize && iChosen < (j + 1) * m_iLengthX)
+                        {//前面的條件是不希望選中的格子超出整個棋盤範圍，後面的條件則是避免超出棋盤外圍的邊界
                             listPushingLine.Add(iChosen);
                         }
                     }
@@ -140,14 +140,42 @@ public class GamingLogic2048
                     for (int j = 0; j < (m_iLengthY - i); j++)
                     {
                         int iChosen = i * m_iLengthX + j + (j * m_iLengthX);
-                        if (iChosen < m_iBoardSize)
-                        {
+                        if (iChosen < m_iBoardSize && iChosen < (i + j + 1) * m_iLengthX)
+                        {//前面的條件是不希望選中的格子超出整個棋盤範圍，後面的條件則是避免超出棋盤外圍的邊界
                             listPushingLine.Add(iChosen);
                         }
                     }
                     listPushing.Add(listPushingLine);
                 }
-                    break;
+                break;
+            case EPushingDirection.BottomLeft: //往左下推，所以找格子時須往右上找
+                for (int i = 0; i < m_iLengthX; i++) //先從0,0向右找
+                {
+                    List<int> listPushingLine = new List<int>();
+                    for (int j = 0; j < (m_iLengthX - i); j++)
+                    {
+                        int iChosen = (m_iLengthY - 1) * m_iLengthX + i + j - (j * m_iLengthX);
+                        if (iChosen < m_iBoardSize && iChosen < (m_iLengthY - j) * m_iLengthX)
+                        {//前面的條件是不希望選中的格子超出整個棋盤範圍，後面的條件則是避免超出棋盤外圍的邊界
+                            listPushingLine.Add(iChosen);
+                        }
+                    }
+                    listPushing.Add(listPushingLine);
+                }
+                for (int i = 1; i < m_iLengthY; i++)
+                {
+                    List<int> listPushingLine = new List<int>();
+                    for (int j = 0; j < (m_iLengthY - i); j++)
+                    {
+                        int iChosen = (m_iLengthY - 1 - i) * m_iLengthX + j - (j * m_iLengthX);
+                        if (iChosen < m_iBoardSize && iChosen < (m_iLengthY -i - j) * m_iLengthX)
+                        {//前面的條件是不希望選中的格子超出整個棋盤範圍，後面的條件則是避免超出棋盤外圍的邊界
+                            listPushingLine.Add(iChosen);
+                        }
+                    }
+                    listPushing.Add(listPushingLine);
+                }
+                break;
         }
         return listPushing;
     }
@@ -205,9 +233,9 @@ public class GamingLogic2048
     {
         List<List<int>> listPushing = this.GetPushingList(_ePushingDirection);
         bool bPushAble = false;//是否可進行壓縮
-        for (int i = 0; i < listPushing.Count && !bPushAble;i++) //挑出行線群的每一條行線進行檢查，若中途發現可以進行壓縮的話就跳出迴圈，因為沒有繼續檢查下去的必要
+        for (int i = 0; i < listPushing.Count && !bPushAble; i++) //挑出行線群的每一條行線進行檢查，若中途發現可以進行壓縮的話就跳出迴圈，因為沒有繼續檢查下去的必要
         {
-            for (int j = 0; j < listPushing[i].Count -1 && !bPushAble; j++)
+            for (int j = 0; j < listPushing[i].Count - 1 && !bPushAble; j++)
             {
                 BlockData blockComparing = m_listBoard[listPushing[i][j]]; //根據行線索引值找到該block物件
                 switch (blockComparing.GetBlockType())
@@ -215,18 +243,18 @@ public class GamingLogic2048
                     case BlockData.EBlockType.Normal: //普通格子就會去檢查自己的下一格是否也是普通格子，且為0或跟自己相等
                         int iNext = j + 1; //用來找出下一格的索引值
                         BlockData blockPolling = m_listBoard[listPushing[i][iNext]];
-                        while(blockPolling.GetBlockType() == BlockData.EBlockType.None && iNext < listPushing[i].Count) //空洞格子雖然沒有效果，但是普通格子可以越過，所以判斷能不能推動時，必須跳過
+                        while (blockPolling.GetBlockType() == BlockData.EBlockType.None && iNext < listPushing[i].Count) //空洞格子雖然沒有效果，但是普通格子可以越過，所以判斷能不能推動時，必須跳過
                         {
                             iNext++;
                             blockPolling = m_listBoard[listPushing[i][iNext]];
                         } //一路一直找，直到找到非空洞(None的格子)，或著找到底了為止
-                        if(blockPolling.GetBlockType() == BlockData.EBlockType.Normal)
+                        if (blockPolling.GetBlockType() == BlockData.EBlockType.Normal)
                         {
-                            if(blockComparing.GetBlockValue() == 0 && blockPolling.GetBlockValue() != 0)
+                            if (blockComparing.GetBlockValue() == 0 && blockPolling.GetBlockValue() != 0)
                             {
                                 bPushAble = true;
                             }
-                            else if(blockComparing.GetBlockValue() != 0 && blockComparing.GetBlockValue() == blockPolling.GetBlockValue() )
+                            else if (blockComparing.GetBlockValue() != 0 && blockComparing.GetBlockValue() == blockPolling.GetBlockValue())
                             {
                                 bPushAble = true;
                             }

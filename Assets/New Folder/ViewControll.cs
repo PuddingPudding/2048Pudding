@@ -70,6 +70,15 @@ public class ViewControll : MonoBehaviour
                 UpdateGame();
             }
         }
+        else if (Input.GetKeyDown(KeyCode.Keypad1))
+        {
+            if (m_game.GetPushAble(GamingLogic2048.EPushingDirection.BottomLeft))
+            {
+                m_game.Pushing(GamingLogic2048.EPushingDirection.BottomLeft);
+                m_game.SpawnRandomBlock(1);
+                UpdateGame();
+            }
+        }
     }
 
     private void InitGame()
