@@ -33,12 +33,11 @@ public class GamingLogic2048
         {
             m_listBoard.Add(new BlockData());
         }
-        this.SpawnRandomBlock(2);
     }
     public GamingLogic2048() //最基本的遊戲開局
         : this(4, 4, 0)
     {
-    }
+    }    
 
     public void SpawnBlock(int _iSpawnPos, BlockData _block) //生成格子
     {
@@ -168,8 +167,64 @@ public class GamingLogic2048
                     for (int j = 0; j < (m_iLengthY - i); j++)
                     {
                         int iChosen = (m_iLengthY - 1 - i) * m_iLengthX + j - (j * m_iLengthX);
-                        if (iChosen < m_iBoardSize && iChosen < (m_iLengthY -i - j) * m_iLengthX)
+                        if (iChosen < m_iBoardSize && iChosen < (m_iLengthY - i - j) * m_iLengthX)
                         {//前面的條件是不希望選中的格子超出整個棋盤範圍，後面的條件則是避免超出棋盤外圍的邊界
+                            listPushingLine.Add(iChosen);
+                        }
+                    }
+                    listPushing.Add(listPushingLine);
+                }
+                break;
+            case EPushingDirection.TopRight: //往右上推，所以找格子時須往左下找
+                for (int i = 0; i < m_iLengthX; i++) //先從0,0向右找
+                {
+                    List<int> listPushingLine = new List<int>();
+                    for (int j = 0; j <= i; j++)
+                    {
+                        int iChosen = i - j + (j * m_iLengthX);
+                        if (iChosen < m_iBoardSize && iChosen >= j * m_iLengthX)
+                        {
+                            listPushingLine.Add(iChosen);
+                        }
+                    }
+                    listPushing.Add(listPushingLine);
+                }
+                for (int i = 1; i < m_iLengthY; i++)
+                {
+                    List<int> listPushingLine = new List<int>();
+                    for (int j = 0; j < (m_iLengthY - i); j++)
+                    {
+                        int iChosen = (i + 1) * m_iLengthX - 1 - j + (j * m_iLengthX);
+                        if (iChosen < m_iBoardSize && iChosen >= (i + j) * m_iLengthX)
+                        {
+                            listPushingLine.Add(iChosen);
+                        }
+                    }
+                    listPushing.Add(listPushingLine);
+                }
+                break;
+            case EPushingDirection.BottomRight: //往右下推，所以找格子時須往左上找
+                for (int i = 0; i < m_iLengthX; i++) //先從左下往右找
+                {
+                    List<int> listPushingLine = new List<int>();
+                    for (int j = 0; j <= i; j++)
+                    {
+                        int iChosen = (m_iLengthY - 1) * m_iLengthX + i - j - (j * m_iLengthX);
+                        if (iChosen < m_iBoardSize && iChosen >= (m_iLengthY - 1 - j) * m_iLengthX)
+                        {
+                            listPushingLine.Add(iChosen);
+                        }
+                    }
+                    listPushing.Add(listPushingLine);
+                }
+                for (int i = 1; i < m_iLengthY; i++)
+                {
+                    List<int> listPushingLine = new List<int>();
+                    for (int j = 0; j < (m_iLengthY - i); j++)
+                    {
+                        int iChosen = (m_iLengthY - i) * m_iLengthX - 1 - j - (j * m_iLengthX);
+                        if (iChosen < m_iBoardSize && iChosen >= (m_iLengthY - i - 1 - j) * m_iLengthX)
+                        {
                             listPushingLine.Add(iChosen);
                         }
                     }
@@ -208,8 +263,12 @@ public class GamingLogic2048
                                         {
                                             blockComparing.PlusOn(blockPolling);
                                             this.m_iScore += blockComparing.GetBlockValue();
+                                            bPolling = false;
                                         }
-                                        bPolling = false;
+                                        else if (blockComparing.GetBlockValue() != blockPolling.GetBlockValue())
+                                        {
+                                            bPolling = false;
+                                        }
                                     }
                                     break;
                                 case BlockData.EBlockType.Obstruct://當普通格子遇到障礙時，停止輪尋
@@ -233,6 +292,7 @@ public class GamingLogic2048
     {
         List<List<int>> listPushing = this.GetPushingList(_ePushingDirection);
         bool bPushAble = false;//是否可進行壓縮
+        Debug.Log("行線群的數目 " + listPushing.Count);
         for (int i = 0; i < listPushing.Count && !bPushAble; i++) //挑出行線群的每一條行線進行檢查，若中途發現可以進行壓縮的話就跳出迴圈，因為沒有繼續檢查下去的必要
         {
             for (int j = 0; j < listPushing[i].Count - 1 && !bPushAble; j++)
@@ -250,6 +310,7 @@ public class GamingLogic2048
                         } //一路一直找，直到找到非空洞(None的格子)，或著找到底了為止
                         if (blockPolling.GetBlockType() == BlockData.EBlockType.Normal)
                         {
+                            Debug.Log("Comparing(" + listPushing[i][j] + "):" + blockComparing.GetBlockValue() + " Polling(" + listPushing[i][iNext] + "):" + blockPolling.GetBlockValue());
                             if (blockComparing.GetBlockValue() == 0 && blockPolling.GetBlockValue() != 0)
                             {
                                 bPushAble = true;
