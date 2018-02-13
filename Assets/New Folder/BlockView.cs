@@ -17,7 +17,7 @@ public class BlockView : MonoBehaviour
     [SerializeField] private Sprite m_sprNoneFace;
     [SerializeField] private LevelColor[] m_arrLevelColor;
     [SerializeField] private Text m_textNum; //外頭顯示的字幕
-     [SerializeField]private Image m_imgBlockFace; //格子的外觀
+    [SerializeField]private Image m_imgBlockFace; //格子的外觀
 
     // Use this for initialization
     void Start()
