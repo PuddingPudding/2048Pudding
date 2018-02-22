@@ -11,9 +11,9 @@ public class GamingLogic2048
         Up,
         Down,
         TopLeft,
-        BottomLeft,
+        BottomRight,
         TopRight,
-        BottomRight
+        BottomLeft,
     }
 
     private List<BlockData> m_listBoard; //整個棋盤
